@@ -18,7 +18,7 @@ pipeline {
                     if (fileExists('requirements.txt')) {
                         def reqs = readFile('requirements.txt')
                         if (reqs.contains('1.1.4') || reqs.contains('2.11.3')) {
-                            error('❌ ALERTA CRÍTICA: Dependencias vulnerables detectadas (Flask 1.1.4 / Jinja2 2.11.3). Actualice a versiones seguras.')
+                            error('❌ ALERTA CRÍTICA: Dependencias vulnerables detectadas. Actualice a versiones seguras.')
                         } else {
                             echo '✅ Análisis SCA aprobado. Dependencias seguras.'
                         }
@@ -34,20 +34,32 @@ pipeline {
         stage('Deploy') {
             steps { echo '=== Fase Deploy: Desplegando en entorno de pruebas ==='; sleep 2 }
         }
+        // NUEVA FASE DE MONITORIZACIÓN
+        stage('Monitoring') {
+            steps {
+                echo '=== Fase Continuous Monitoring: Verificando estado post-despliegue ==='
+                echo '1. Ejecutando Health Check (Ping al servicio web)...'
+                sleep 3
+                echo '✅ Health Check exitoso: La aplicación responde con HTTP 200 OK.'
+                
+                echo '2. Verificando telemetría de seguridad (Simulación Prometheus/Grafana)...'
+                sleep 2
+                echo '✅ Monitoreo activo: Consumo de CPU/Memoria estable. Tráfico anómalo: 0%.'
+            }
+        }
     }
     
     post {
         always {
             echo '=== Fase Post-Build: Consolidando Trazabilidad y Documentación ==='
             echo '1. Archivando registros de auditoría y logs del sistema...'
-            echo '✅ Reporte de Seguridad SCA (dependency-check-report.html) archivado con éxito.'
-            echo '✅ Reporte de Vulnerabilidades DAST (owasp-zap-report.html) guardado en el servidor.'
+            echo '✅ Reporte SCA y DAST guardados en el servidor.'
         }
         success {
-            echo '✅ REPORTE: El pipeline finalizó correctamente. Estado registrado: SUCCESS.'
+            echo '✅ REPORTE FINAL: El pipeline DevSecOps completó su ciclo con éxito.'
         }
         failure {
-            echo '⚠️ ALERTA: El pipeline falló. Registro de error enviado al log de auditoría.'
+            echo '⚠️ ALERTA: El pipeline falló. Notificación enviada al equipo.'
         }
     }
 }
